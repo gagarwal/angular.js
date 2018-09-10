@@ -226,6 +226,34 @@ describe('$timeout', function() {
   });
 
 
+  describe('cancelAll', function() {
+    it('should cancel all pending timeouts', inject(function ($timeout, $browser) {
+      var counter = 0;
+      $timeout(function () { counter++; }, 1000);
+      $timeout(function () { counter++; }, 1000);
+      $timeout(function () { counter++; }, 1000);
+
+      var didCancelAllSucceed = $timeout.cancelAll();
+      expect(function() {$timeout.flush();}).toThrowError();
+      expect(didCancelAllSucceed).toBe(true);
+      expect(counter).toBe(0);
+    }));
+
+    it('should return false when a timeout is missing the timeoutId', inject(function ($timeout, $browser) {
+      var counter = 0;
+      var promise = $timeout(function () {
+        counter++;
+      }, 1000);
+      delete promise.$$timeoutId;
+
+      var didCancelAllSucceed = $timeout.cancelAll();
+      $timeout.flush();
+      expect(didCancelAllSucceed).toBe(false);
+      expect(counter).toBe(1);
+    }));
+  });
+
+
   describe('cancel', function() {
     it('should cancel tasks', inject(function($timeout) {
       var task1 = jasmine.createSpy('task1'),

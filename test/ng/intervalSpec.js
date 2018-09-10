@@ -281,6 +281,36 @@ describe('$interval', function() {
   });
 
 
+  describe('cancelAll', function() {
+    it('should cancel all pending intervals', inject(function ($interval, $window) {
+      var counter = 0;
+      $interval(function () { counter++; }, 1000);
+      $interval(function () { counter++; }, 1000);
+      $interval(function () { counter++; }, 1000);
+
+      var didCancelAllSucceed = $interval.cancelAll();
+      $window.flush(2001);
+      expect(didCancelAllSucceed).toBe(true);
+
+      // since we cancelled before we flushed, we expect the counter to be at 0, since it never gets executed
+      expect(counter).toBe(0);
+    }));
+
+    it('should return false when a interval is missing the intervalId', inject(function ($interval, $window) {
+      var counter = 0;
+      var promise = $interval(function () {
+        counter++;
+      }, 1000);
+      delete promise.$$intervalId;
+
+      var didCancelAllSucceed = $interval.cancelAll();
+      $window.flush(2001);
+      expect(didCancelAllSucceed).toBe(false);
+      expect(counter).toBe(2);
+    }));
+  });
+
+
   describe('cancel', function() {
     it('should cancel tasks', inject(function($interval, $window) {
       var task1 = jasmine.createSpy('task1', 1000),

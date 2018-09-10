@@ -195,6 +195,28 @@ function $IntervalProvider() {
       }
       return false;
     };
+    
+    
+    /**
+     * @ngdoc method
+     * @name $interval#cancelAll
+     *
+     * @description
+     * Cancels all intervals that are still pending
+     *
+     * @returns {boolean} Returns `true` if all timeouts were successfully cancelled, `false` otherwise
+     */
+    interval.cancelAll = function() {
+      var errorOccurred = false;
+      for (var $$intervalId in intervals) {
+        try {
+          interval.cancel(intervals[$$intervalId].promise);
+        } catch (err) {
+          errorOccurred = true;
+        }
+      }
+      return !errorOccurred && equals({}, intervals);
+    };
 
     return interval;
   }];

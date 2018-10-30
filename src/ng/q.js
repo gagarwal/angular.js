@@ -218,18 +218,18 @@
  */
 function $QProvider() {
 
-  this.$get = ['$rootScope', '$exceptionHandler', function($rootScope, $exceptionHandler) {
+  this.$get = ['$rootScope', '$exceptionHandler', '$$qPromiseTracker', function($rootScope, $exceptionHandler, $$qPromiseTracker) {
     return qFactory(function(callback) {
       $rootScope.$evalAsync(callback);
-    }, $exceptionHandler);
+    }, $exceptionHandler, $$qPromiseTracker);
   }];
 }
 
 function $$QProvider() {
-  this.$get = ['$browser', '$exceptionHandler', function($browser, $exceptionHandler) {
+  this.$get = ['$browser', '$exceptionHandler', '$$qPromiseTracker', function($browser, $exceptionHandler, $$qPromiseTracker) {
     return qFactory(function(callback) {
       $browser.defer(callback);
-    }, $exceptionHandler);
+    }, $exceptionHandler, $$qPromiseTracker);
   }];
 }
 
@@ -241,7 +241,7 @@ function $$QProvider() {
  *     debugging purposes.
  * @returns {object} Promise manager.
  */
-function qFactory(nextTick, exceptionHandler) {
+function qFactory(nextTick, exceptionHandler, promiseTracker) {
   var $qMinErr = minErr('$q', TypeError);
 
   /**
@@ -265,6 +265,9 @@ function qFactory(nextTick, exceptionHandler) {
 
   function Promise() {
     this.$$state = { status: 0 };
+
+    // some built-in angular module may use promises when the dependencies are not yet loaded, make sure not to track those
+    promiseTracker.track(this);
   }
 
   extend(Promise.prototype, {
@@ -361,6 +364,8 @@ function qFactory(nextTick, exceptionHandler) {
         } else {
           this.promise.$$state.value = val;
           this.promise.$$state.status = 1;
+
+          promiseTracker.untrack(this.promise);
           scheduleProcessQueue(this.promise.$$state);
         }
       } catch (e) {
@@ -388,6 +393,8 @@ function qFactory(nextTick, exceptionHandler) {
     $$reject: function(reason) {
       this.promise.$$state.value = reason;
       this.promise.$$state.status = 2;
+
+      promiseTracker.untrack(this.promise);
       scheduleProcessQueue(this.promise.$$state);
     },
 

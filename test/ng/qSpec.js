@@ -895,6 +895,7 @@ describe('q', function() {
       expect(deferred.promise).toBeDefined();
       expect(deferred.resolve).toBeDefined();
       expect(deferred.reject).toBeDefined();
+      expect(deferred.rejectSilently).toBeDefined();
     });
 
     it('should keep track of the new deferred', function() {
@@ -1122,6 +1123,98 @@ describe('q', function() {
         rejector('detached');
         mockNextTick.flush();
         expect(logStr()).toBe('error(detached)->reject(detached)');
+      });
+    });
+
+
+    describe('rejectSilently', function() {
+      it('should reject the promise and should not execute error callbacks',
+          function() {
+        promise.then(success(), error(1));
+        promise.then(success(), error(2));
+        expect(logStr()).toBe('');
+
+        deferred.rejectSilently();
+        mockNextTick.flush();
+        expect(logStr()).toBe('');
+      });
+
+
+      it('reject and rejectSilently should follow the same chain rejection', function() {
+        mockPromiseTracker.untrackedPromises = [];
+        var deferred1 = defer();
+        deferred1.promise
+        .then(() => {}).catch((err) => {})
+        .then(() => {}).catch((err) => {});
+
+        deferred1.reject();
+        mockNextTick.flush();
+        var rejectUntrackedCount = mockPromiseTracker.untrackedPromises.length;
+
+        mockPromiseTracker.untrackedPromises = [];
+        var deferred2 = defer();
+        deferred2.promise
+        .then(() => {}).catch((err) => {})
+        .then(() => {}).catch((err) => {});
+
+        deferred2.rejectSilently();
+        mockNextTick.flush();
+        var rejectSilentlyUntrackedCount = mockPromiseTracker.untrackedPromises.length;
+
+        expect(rejectSilentlyUntrackedCount).toBe(rejectUntrackedCount);
+      });
+
+      it('should do nothing if a promise was previously resolved', function() {
+        promise.then(success(1), error(1));
+        expect(logStr()).toBe('');
+
+        deferred.resolve('foo');
+        mockNextTick.flush();
+        expect(logStr()).toBe('success1(foo)->foo');
+
+        log = [];
+        deferred.rejectSilently();
+        deferred.resolve('baz');
+        expect(mockNextTick.queue.length).toBe(0);
+        expect(logStr()).toBe('');
+
+        promise.then(success(2), error(2));
+        expect(logStr()).toBe('');
+        mockNextTick.flush();
+        expect(logStr()).toBe('');
+      });
+
+
+      it('should do nothing if a promise was previously rejected', function() {
+        promise.then(success(1), error(1));
+        expect(logStr()).toBe('');
+
+        deferred.reject('foo');
+        mockNextTick.flush();
+        expect(logStr()).toBe('error1(foo)->reject(foo)');
+
+        log = [];
+        deferred.rejectSilently();
+        deferred.resolve('baz');
+        expect(mockNextTick.queue.length).toBe(0);
+        expect(logStr()).toBe('');
+
+        promise.then(success(2), error(2));
+        expect(logStr()).toBe('');
+        mockNextTick.flush();
+        expect(logStr()).toBe('');
+      });
+
+
+      it('should not call the error callback in the next turn', function() {
+        promise.then(success(), error());
+        expect(logStr()).toBe('');
+
+        deferred.rejectSilently();
+        expect(logStr()).toBe('');
+
+        mockNextTick.flush();
+        expect(logStr()).toBe('');
       });
     });
 
@@ -2084,7 +2177,7 @@ describe('q', function() {
 
 
     beforeEach(function() {
-      q = qFactory(mockNextTick.nextTick, mockExceptionLogger.logger),
+      q = qFactory(mockNextTick.nextTick, mockExceptionLogger.logger, mockPromiseTracker),
       defer = q.defer;
       deferred =  defer();
       promise = deferred.promise;
@@ -2198,7 +2291,7 @@ describe('q', function() {
       errorSpy = jasmine.createSpy('errorSpy');
 
 
-      q = qFactory(mockNextTick.nextTick, exceptionExceptionSpy);
+      q = qFactory(mockNextTick.nextTick, exceptionExceptionSpy, mockPromiseTracker);
       deferred = q.defer();
     });
 

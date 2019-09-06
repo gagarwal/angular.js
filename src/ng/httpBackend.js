@@ -105,14 +105,22 @@ function createHttpBackend($browser, createXhr, $browserDefer, callbacks, rawDoc
             statusText);
       };
 
+      var isTimedOut = false;
       var requestError = function() {
         // The response is always empty
         // See https://xhr.spec.whatwg.org/#request-error-steps and https://fetch.spec.whatwg.org/#concept-network-error
-        completeRequest(callback, -1, null, null, '');
+        completeRequest(callback, -1, null, null, 'UnknownError');
+      };
+
+      var requestAbort = function() {
+        // The response is always empty
+        // See https://xhr.spec.whatwg.org/#request-error-steps and https://fetch.spec.whatwg.org/#concept-network-error
+        completeRequest(callback, -1, null, null, isTimedOut ? 'Timeout' : 'UnknownAbort');
+        isTimedOut = false;
       };
 
       xhr.onerror = requestError;
-      xhr.onabort = requestError;
+      xhr.onabort = requestAbort;
 
       forEach(eventHandlers, function(value, key) {
           xhr.addEventListener(key, value);
@@ -155,7 +163,10 @@ function createHttpBackend($browser, createXhr, $browserDefer, callbacks, rawDoc
 
     function timeoutRequest() {
       jsonpDone && jsonpDone();
-      xhr && xhr.abort();
+      if (xhr) {
+        isTimedOut = true;
+        xhr.abort();
+      }
     }
 
     function completeRequest(callback, status, response, headersString, statusText) {

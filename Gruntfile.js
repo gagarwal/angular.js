@@ -14,6 +14,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('angular-benchpress');
 
   var NG_VERSION = versionInfo.currentVersion;
+  // NG_VERSION.full = '1.5.15'; // Set the desired version here.
   NG_VERSION.cdn = versionInfo.cdnVersion;
   var dist = 'angular-'+ NG_VERSION.full;
 

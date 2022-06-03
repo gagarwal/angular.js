@@ -322,8 +322,8 @@
           "dependencies": {
             "traceur": {
               "version": "0.0.33",
-              "from": "git://github.com/vojtajina/traceur-compiler.git#d90b1e34c799bf61cd1aafdc33db0a554fa9e617",
-              "resolved": "git://github.com/vojtajina/traceur-compiler.git#d90b1e34c799bf61cd1aafdc33db0a554fa9e617",
+              "from": "https://github.com/vojtajina/traceur-compiler.git#d90b1e34c799bf61cd1aafdc33db0a554fa9e617",
+              "resolved": "https://github.com/vojtajina/traceur-compiler.git#d90b1e34c799bf61cd1aafdc33db0a554fa9e617",
               "dependencies": {
                 "commander": {
                   "version": "2.7.1",
@@ -6098,8 +6098,8 @@
     },
     "grunt-jasmine-node": {
       "version": "0.1.0",
-      "from": "git://github.com/vojtajina/grunt-jasmine-node.git#ced17cbe52c1412b2ada53160432a5b681f37cd7",
-      "resolved": "git://github.com/vojtajina/grunt-jasmine-node.git#ced17cbe52c1412b2ada53160432a5b681f37cd7"
+      "from": "https://github.com/vojtajina/grunt-jasmine-node.git#ced17cbe52c1412b2ada53160432a5b681f37cd7",
+      "resolved": "https://github.com/vojtajina/grunt-jasmine-node.git#ced17cbe52c1412b2ada53160432a5b681f37cd7"
     },
     "grunt-jscs": {
       "version": "2.8.0",
